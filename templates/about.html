@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}About{% endblock %}
+
+{% block header %}
+<h1>About Haitwu</h1>
+{% endblock %}
+
+{% block content %}
+
+<p>
+<b>Haitwu</b> is written in <a href="http://www.python.org/">Python</a> on top
+of <a href="http://code.google.com/appengine/">Google AppEngine</a>.
+</p>
+
+<p>
+DeWitt Clinton's <a href="http://code.google.com/p/python-twitter/">Python
+Twitter</a> module is used to access the public Twitter API.
+</p>
+
+<p>
+Haiku detection is based on Jonathan Feinberg's
+<a href="http://github.com/jdf/haikufinder">haikufinder</a> module, which uses the <a href="http://www.nltk.org/">Natural Language Toolkit</a>.
+</p>
+
+{% endblock %}

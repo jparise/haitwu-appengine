@@ -1,0 +1,126 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background: #8ec0db;
+	color: #333;
+	font-family: 'Lucida Grande', sans-serif;
+	font-size: 0.8em;
+	margin-top: 10px;
+}
+
+a {
+	color: #009;
+}
+
+a:link, a:visited {
+	padding-bottom: 0;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+img {
+	border: 0;
+}
+
+h1, h2 {
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+form {
+	margin: 20px 0 30px 0;
+}
+
+input {
+	border: 1px solid #aaa;
+	font-size: 1.3em;
+	padding: 4px 2px;
+	-moz-border-radius-bottomleft: 3px;
+	-moz-border-radius-bottomright: 3px;
+	-moz-border-radius-topleft: 3px;
+	-moz-border-radius-topright: 3px;
+}
+
+p {
+	line-height: 1.5em;
+	margin-top: 10px;
+}
+
+#container {
+	margin: 10px auto 10px;
+	max-width: 50em;
+}
+
+#banner {
+	font-size: 1.3em;
+	margin: 0 5px 10px 5px;
+}
+
+#banner ul {
+	list-style: none;
+	float: right;
+	margin: 20px 0 0 0;
+}
+
+#banner li {
+	float: left;
+	padding-left: 1em;
+	text-transform: lowercase;
+}
+
+#banner a {
+	border: none;
+	color: #fff;
+	text-decoration: none;
+}
+
+#banner a:hover {
+	border: none;
+	text-decoration: underline;
+}
+
+#header {
+	margin-bottom: 10px;
+}
+
+#content {
+	background: #fff;
+	padding: 20px;
+	-moz-border-radius-bottomleft:5px;
+	-moz-border-radius-bottomright:5px;
+	-moz-border-radius-topleft:5px;
+	-moz-border-radius-topright:5px;
+}
+
+#footer {
+	border-top: 1px solid #bbb;
+	padding-top: 10px;
+	margin-top: 20px;
+}
+
+#haikus {
+	font-family: Georgia, Times New Roman, serif;
+	font-size: 2em;
+	font-style: italic;
+	max-width: 20em;
+	margin-left: 2em;
+}
+
+.haiku {
+	margin-top: 20px;
+}
+
+.haiku .l1 {
+	margin-left: 1em;
+}
+
+.haiku .citation {
+	font-size: 14px;
+	margin-top: 5px;
+	text-align: right;
+}

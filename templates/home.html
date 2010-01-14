@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Haikus In Tweets{% endblock %}
+
+{% block header %}
+<h1>Find Haikus in Tweets</h1>
+{% endblock %}
+
+{% block content %}
+
+<p>
+A <b>haiku</b> is a Japanese poetic form made up of seventeen syllables
+arranged in 5-7-5 order.  Hunt for haikus (intentional or not) in users' public Twitter timelines by entering a Twitter username below.
+</p>
+
+<div style="text-align: center">
+<form method="get" action="/">
+	<input name="u" type="text">
+	<input type="submit" value="Find Haikus">
+</form>
+</div>
+
+<h2>Examples</h2>
+
+<div id="haikus">
+<div class="haiku">
+	<div class="l0">I KNEW I shouldn't</div>
+	<div class="l1">have worn that belt I picked up</div>
+	<div class="l2">for 99 cents!</div>
+	<div class="citation">&mdash;
+		<a href="http://twitter.com/feliciaday">Felicia Day</a> on
+		<a href="http://twitter.com/feliciaday/status/6672785511">December 14, 2009</a></div>
+</div>
+
+<div class="haiku">
+	<div class="l0">Was officially</div>
+	<div class="l1">instructed to stop coding</div>
+	<div class="l2">and start partying.</div>
+	<div class="citation">&mdash;
+		<a href="http://twitter.com/grahams">Sean Graham</a> on
+		<a href="http://twitter.com/grahams/status/7249097979">December 31, 2009</a></div>
+</div>
+</div>
+
+{% endblock %}

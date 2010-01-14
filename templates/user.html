@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.screen_name }}{% endblock %}
+
+{% block header %}
+<h1>Haikus tweeted by <a href="http://twitter.com/{{ user.screen_name }}">{{ user.name }}</a> ...</h1>
+{% endblock %}
+
+{% block content %}
+{% if haikus %}
+<div id="haikus">
+{% for haiku in haikus %}
+<div class="haiku">
+	<div class="l0">{{ haiku.lines.0 }}</div>
+	<div class="l1">{{ haiku.lines.1 }}</div>
+	<div class="l2">{{ haiku.lines.2 }}</div>
+	<div class="citation">&mdash; <a href="http://twitter.com/{{ haiku.entry.user.screen_name }}/status/{{ haiku.entry.id }}">{{ haiku.date|date:"F j, Y" }}</a></div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<p>
+Sorry, no haikus were found in <a href="http://twitter.com/{{ user.screen_name }}">{{ user.name }}</a>'s public timeline.
+</p>
+
+<div style="text-align: center">
+<form method="get" action="/">
+	<input name="u" type="text">
+	<input type="submit" value="Find Haikus">
+</form>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+	<title>{% block title %}Find Haikus In Your Tweets{% endblock %} - Haitwu</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Language" content="en-us">
+	<link rel="stylesheet" type="text/css" media="screen" href="/m/h.css">
+</head>
+
+<body>
+
+<div id="container">
+<div id="banner">
+<ul>
+	<li><a href="/">home</a></li>
+	<li><a href="/about">about</a></li>
+</ul>
+<a href="/"><img src="/m/haitwu.png" alt="Haitwu"></a>
+</div>
+
+<div id="content">
+<div id="header">
+{% block header %}{% endblock %}
+</div>
+
+{% block content %}{% endblock %}
+
+<div id="footer">
+	Site copyright &copy; {% now "Y" %} by
+	<a href="http://www.indelible.org/">Jon Parise</a>.
+	Tweets belong to their respective authors.
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
+
