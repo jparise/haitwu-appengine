@@ -4,6 +4,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import memcache
 
 import datetime
+import logging
 import time
 import haikufinder
 import twitter
@@ -56,14 +57,17 @@ class UserPage(webapp.RequestHandler):
         try:
             timeline = api.GetUserTimeline(screen_name, count=300)
         except:
+            logging.warning("Failed to get timeline for '%s'", screen_name)
             timeline = []
 
         # Fill out our user object.  If we didn't get any results from the API
         # query, we make a dummy object based solely on the screen name.
         if timeline:
             user = timeline[0].user
+            logging.debug("%d entries for '%s'", len(timeline), screen_name)
         else:
             user = twitter.User(name=screen_name, screen_name=screen_name)
+            logging.info("Empty public timeline for '%s'", screen_name)
 
         # Walk through all of the entries looking for haikus.
         haikus = []
@@ -77,6 +81,9 @@ class UserPage(webapp.RequestHandler):
                     'date': datetime.date.fromtimestamp(timestamp)
                 }
                 haikus.append(haiku)
+
+        if not haikus:
+            logging.info("No haikus for '%s'", screen_name)
 
         # Fill out our template variables and render the template.
         vars = {
