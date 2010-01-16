@@ -1,38 +1,78 @@
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import memcache
+from google.appengine.api import memcache, urlfetch
+from django.utils import simplejson
 
+import calendar
 import datetime
-import logging
-import time
 import haikufinder
-import twitter
+import logging
+import rfc822
+import urllib
 
 class TwitterCache(object):
-    '''A Twitter cache implementation that uses memcache'''
 
-    def _GetCacheKey(self, key):
-        return 'twitter_' + key
+    def __init__(self, expiration):
+        self.expiration = expiration
 
-    def Get(self, key):
-        data = memcache.get(self._GetCacheKey(key))
+    def get(self, key):
+        return memcache.get(key, 'twitter')
+
+    def set(self, key, data):
+        memcache.set(key, data, self.expiration, 'twitter')
+
+    def discard(self, key):
+        memcache.delete(key, 0, 'twitter')
+
+class User(object):
+
+    def __init__(self, data=None, name=None, screen_name=None):
         if data is not None:
-            return data[0]
-        return None
+            self.id = data.get('id', None)
+            self.name = data.get('name', None)
+            self.screen_name = data.get('screen_name', None)
+        if name is not None:
+            self.name = name
+        if screen_name is not None:
+            self.screen_name = screen_name
 
-    def Set(self, key, data):
-        data = (data, time.time())
-        memcache.set(self._GetCacheKey(key), data)
+class Entry(object):
 
-    def Remove(self, key):
-        memcache.delete(self._GetCacheKey(key))
+    def __init__(self, data):
+        self.id = data.get('id', None)
+        self.text = data.get('text', None)
+        self.user = User(data.get('user', None))
 
-    def GetCachedTime(self,key):
-        data = memcache.get(self._GetCacheKey(key))
-        if data is not None:
-            return data[1]
-        return None
+        created_at = data.get('created_at', None)
+        if created_at is not None:
+            self.timestamp = calendar.timegm(rfc822.parsedate(created_at))
+        else:
+            self.timestamp = None
+
+def get_timeline(screen_name, cache):
+    # Start by looking up this user's content in the cache.
+    content = cache.get(screen_name)
+
+    # If we didn't find any cached content, we need to fetch.
+    if not content:
+        url = 'http://twitter.com/statuses/user_timeline.json'
+        url += '?screen_name=' + urllib.quote(screen_name) + '&count=200'
+
+        result = urlfetch.fetch(url, deadline=10)
+        if result.status_code == 200:
+            content = result.content
+
+    # If we still don't have any content, just return an empty list.
+    if not content:
+        return []
+
+    # Store the content in the cache.
+    cache.set(screen_name, content)
+    
+    # Parse the JSON content and convert it into a list of entries.
+    data = simplejson.loads(result.content)
+    return [Entry(e) for e in data]
 
 class HomePage(webapp.RequestHandler):
     def get(self):
@@ -49,41 +89,37 @@ class AboutPage(webapp.RequestHandler):
 
 class UserPage(webapp.RequestHandler):
     def get(self, screen_name):
-        api = twitter.Api(cache=cache)
+        logging.info("Handling '%s'" % screen_name)
 
         # Query for the requested user's public timeline.  If we encounter any
         # problems here, we simply treat them all as a generic "nothing found"
         # case and let the code below sort things out.
+        #timeline = api.GetUserTimeline(screen_name, count=200)
         try:
-            timeline = api.GetUserTimeline(screen_name, count=300)
-        except:
-            logging.warning("Failed to get timeline for '%s'", screen_name)
+            timeline = get_timeline(screen_name, cache)
+        except Exception, e:
+            logging.warning("Failed to get timeline for '%s': %s",
+                            screen_name, str(e))
             timeline = []
 
         # Fill out our user object.  If we didn't get any results from the API
         # query, we make a dummy object based solely on the screen name.
         if timeline:
             user = timeline[0].user
-            logging.debug("%d entries for '%s'", len(timeline), screen_name)
         else:
-            user = twitter.User(name=screen_name, screen_name=screen_name)
-            logging.info("Empty public timeline for '%s'", screen_name)
+            user = User(name=screen_name, screen_name=screen_name)
 
         # Walk through all of the entries looking for haikus.
         haikus = []
         for entry in timeline:
             matches = haikufinder.find_haikus(entry.text)
             if matches:
-                timestamp = entry.created_at_in_seconds
                 haiku = {
                     'lines': matches[0],
                     'entry': entry,
-                    'date': datetime.date.fromtimestamp(timestamp)
+                    'date': datetime.date.fromtimestamp(entry.timestamp)
                 }
                 haikus.append(haiku)
-
-        if not haikus:
-            logging.info("No haikus for '%s'", screen_name)
 
         # Fill out our template variables and render the template.
         vars = {
@@ -93,7 +129,7 @@ class UserPage(webapp.RequestHandler):
         self.response.out.write(template.render('templates/user.html', vars))
 
 # Set up our global state variables.
-cache = TwitterCache()
+cache = TwitterCache(3600)
 application = webapp.WSGIApplication(
         [
             ('/', HomePage),
