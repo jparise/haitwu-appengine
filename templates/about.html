@@ -8,6 +8,20 @@
 
 {% block content %}
 
+<h2>Overview</h2>
+<p>
+<b>Haitwu</b> is fairly simple.  It fetches the last 200 public tweets for the
+requested screen name and scans their text for sequences of words that match
+the 5-7-5 syllable haiku "formula".
+</p>
+
+<p>
+Due to the free-form text patterns often found in tweets, haiku detection isn't
+always completely accurate.  Various bits of punctuation can throw things off,
+for example.  Improvements will come in time.
+</p>
+
+<h2>Technology</h2>
 <p>
 <b>Haitwu</b> is written in <a href="http://www.python.org/">Python</a> on top
 of <a href="http://code.google.com/appengine/">Google AppEngine</a>.
