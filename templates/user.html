@@ -19,9 +19,14 @@
 {% endfor %}
 </div>
 {% else %}
+
+{% if error %}
+Sorry, an error occured while fetching <a href="http://twitter.com/{{ user.screen_name }}">{{ user.name }}</a>'s public timeline.  Please try again.
+{% else %}
 <p>
 Sorry, no haikus were found in <a href="http://twitter.com/{{ user.screen_name }}">{{ user.name }}</a>'s public timeline.
 </p>
+{% endif %}
 
 <div style="text-align: center">
 <form method="get" action="/">

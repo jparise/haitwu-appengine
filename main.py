@@ -91,6 +91,10 @@ class UserPage(webapp.RequestHandler):
     def get(self, screen_name):
         logging.info("Handling '%s'" % screen_name)
 
+        # The error flag is used to indicate that some sort of error occurred.
+        # It is treated as a generic failure by the output template.
+        error = False
+
         # Query for the requested user's public timeline.  If we encounter any
         # problems here, we simply treat them all as a generic "nothing found"
         # case and let the code below sort things out.
@@ -100,6 +104,7 @@ class UserPage(webapp.RequestHandler):
         except Exception, e:
             logging.warning("Failed to get timeline for '%s': %s",
                             screen_name, str(e))
+            error = True
             timeline = []
 
         # Fill out our user object.  If we didn't get any results from the API
@@ -124,6 +129,7 @@ class UserPage(webapp.RequestHandler):
         # Fill out our template variables and render the template.
         vars = {
             'user': user,
+            'error': error,
             'haikus': haikus,
         }
         self.response.out.write(template.render('templates/user.html', vars))
