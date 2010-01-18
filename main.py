@@ -136,7 +136,7 @@ application = webapp.WSGIApplication(
             ('/about', AboutPage),
             ('/(\w+)', UserPage),
         ],
-        debug=True)
+        debug=False)
 
 def main():
     run_wsgi_app(application)
