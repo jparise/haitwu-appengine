@@ -16,6 +16,19 @@ the 5-7-5 syllable haiku "formula".
 </p>
 
 <p>
+To reduce load, each screen name's results are cached for one hour.  New
+haiku-compliant tweets won't show up until the screen name's cache entry
+expires.
+</p>
+
+<p>
+Unfortunately, timeline request errors occur fairly often due to Twitter's
+<a href="http://apiwiki.twitter.com/Rate-limiting">rate limiting</a>.  Haitwu
+uses the public (non-authenticated) Twitter API from shared Google AppEngine
+IP addresses, so it runs into the rate limit fairly often.
+</p>
+
+<p>
 Due to the free-form text patterns often found in tweets, haiku detection isn't
 always completely accurate.  Various bits of punctuation can throw things off,
 for example.  Improvements will come in time.

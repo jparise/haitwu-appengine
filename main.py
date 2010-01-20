@@ -6,24 +6,14 @@ from django.utils import simplejson
 
 import calendar
 import datetime
-import haikufinder
 import logging
+import pickle
 import rfc822
 import urllib
 
-class TwitterCache(object):
+import haikufinder
 
-    def __init__(self, expiration):
-        self.expiration = expiration
-
-    def get(self, key):
-        return memcache.get(key, 'twitter')
-
-    def set(self, key, data):
-        memcache.set(key, data, self.expiration, 'twitter')
-
-    def discard(self, key):
-        memcache.delete(key, 0, 'twitter')
+CACHE_EXPIRATION = 3600
 
 class User(object):
 
@@ -50,26 +40,18 @@ class Entry(object):
         else:
             self.timestamp = None
 
-def get_timeline(screen_name, cache):
-    # Start by looking up this user's content in the cache.
-    content = cache.get(screen_name)
+def get_timeline(screen_name):
+    url = 'http://twitter.com/statuses/user_timeline.json'
+    url += '?screen_name=' + urllib.quote(screen_name) + '&count=200'
 
-    # If we didn't find any cached content, we need to fetch.
-    if not content:
-        url = 'http://twitter.com/statuses/user_timeline.json'
-        url += '?screen_name=' + urllib.quote(screen_name) + '&count=200'
-
-        result = urlfetch.fetch(url, deadline=10)
-        if result.status_code == 200:
-            content = result.content
+    result = urlfetch.fetch(url, deadline=10)
+    if result.status_code != 200:
+        raise Exception("Bad HTTP result: %d" % result.status_code)
 
     # If we still don't have any content, just return an empty list.
-    if not content:
+    if not result.content:
         return []
 
-    # Store the content in the cache.
-    cache.set(screen_name, content)
-    
     # Parse the JSON content and convert it into a list of entries.
     data = simplejson.loads(result.content)
     return [Entry(e) for e in data]
@@ -95,36 +77,57 @@ class UserPage(webapp.RequestHandler):
         # It is treated as a generic failure by the output template.
         error = False
 
-        # Query for the requested user's public timeline.  If we encounter any
-        # problems here, we simply treat them all as a generic "nothing found"
-        # case and let the code below sort things out.
-        #timeline = api.GetUserTimeline(screen_name, count=200)
-        try:
-            timeline = get_timeline(screen_name, cache)
-        except Exception, e:
-            logging.warning("Failed to get timeline for '%s': %s",
-                            screen_name, str(e))
-            error = True
-            timeline = []
+        #
+        cached = False
 
-        # Fill out our user object.  If we didn't get any results from the API
-        # query, we make a dummy object based solely on the screen name.
-        if timeline:
-            user = timeline[0].user
-        else:
-            user = User(name=screen_name, screen_name=screen_name)
+        # Attempt to load this user's data from the cache.
+        data = memcache.get(screen_name)
+        if data:
+            try:
+                user, haikus = pickle.loads(data)
+                cached = True
+                logging.debug("Loaded '%s' from cache", screen_name)
+            except Exception, e:
+                # We allow all failures, leaving 'cached' set to False.
+                logging.error("Cache error for '%s': %s", screen_name, str(e))
 
-        # Walk through all of the entries looking for haikus.
-        haikus = []
-        for entry in timeline:
-            matches = haikufinder.find_haikus(entry.text)
-            if matches:
-                haiku = {
-                    'lines': matches[0],
-                    'entry': entry,
-                    'date': datetime.date.fromtimestamp(entry.timestamp)
-                }
-                haikus.append(haiku)
+        # If we have weren't able to load cached data, we need to fetch this
+        # user's timeline and parse the text for haikus.
+        if not cached:
+            # Query for the requested user's public timeline.  If we encounter
+            # any problems here, we simply treat them all as a generic
+            # "nothing found" case and let the code below sort things out.
+            try:
+                timeline = get_timeline(screen_name)
+                logging.debug("Fetched timeline for '%s'", screen_name)
+            except Exception, e:
+                logging.warn("Fetch error for '%s': %s", screen_name, str(e))
+                error = True
+                timeline = []
+
+            # Fill out our user object.  If we didn't get any results from the
+            # API query, we make a dummy object based on the screen name.
+            if timeline:
+                user = timeline[0].user
+            else:
+                user = User(name=screen_name, screen_name=screen_name)
+
+            # Walk through all of the timeline entries looking for haikus.
+            haikus = []
+            for entry in timeline:
+                matches = haikufinder.find_haikus(entry.text)
+                if matches:
+                    haiku = {
+                        'lines': matches[0],
+                        'entry': entry,
+                        'date': datetime.date.fromtimestamp(entry.timestamp)
+                    }
+                    haikus.append(haiku)
+
+            if not error:
+                # Pickle the user's data and insert it into the cache.
+                data = pickle.dumps((user, haikus))
+                memcache.set(screen_name, data, CACHE_EXPIRATION)
 
         # Fill out our template variables and render the template.
         vars = {
@@ -135,7 +138,6 @@ class UserPage(webapp.RequestHandler):
         self.response.out.write(template.render('templates/user.html', vars))
 
 # Set up our global state variables.
-cache = TwitterCache(3600)
 application = webapp.WSGIApplication(
         [
             ('/', HomePage),
