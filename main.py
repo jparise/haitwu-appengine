@@ -13,6 +13,7 @@ import urllib
 
 import haikufinder
 
+# How long should users' data be stored in memcache (in seconds)?
 CACHE_EXPIRATION = 3600
 
 class User(object):
@@ -77,7 +78,8 @@ class UserPage(webapp.RequestHandler):
         # It is treated as a generic failure by the output template.
         error = False
 
-        #
+        # The cached flag indicates whether or not the requested user's data
+        # could be loaded from memcache.
         cached = False
 
         # Attempt to load this user's data from the cache.
