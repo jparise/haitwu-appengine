@@ -55,7 +55,7 @@ def get_timeline(screen_name):
     if get_rate_limit() == 0:
         raise Exception("Rate Limit Exceeded")
 
-    url = 'http://twitter.com/statuses/user_timeline.json'
+    url = 'http://api.twitter.com/1/statuses/user_timeline.json'
     url += '?screen_name=' + urllib.quote(screen_name) + '&count=200'
 
     result = urlfetch.fetch(url, deadline=10)
