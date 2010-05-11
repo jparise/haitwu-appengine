@@ -41,7 +41,20 @@ class Entry(object):
         else:
             self.timestamp = None
 
+def get_rate_limit():
+    url = 'http://api.twitter.com/1/account/rate_limit_status.json'
+
+    result = urlfetch.fetch(url, deadline=10)
+    if result.status_code != 200:
+        return 0
+
+    data = simplejson.loads(result.content)
+    return data.get('remaining_hits', 0)
+
 def get_timeline(screen_name):
+    if get_rate_limit() == 0:
+        raise Exception("Rate Limit Exceeded")
+
     url = 'http://twitter.com/statuses/user_timeline.json'
     url += '?screen_name=' + urllib.quote(screen_name) + '&count=200'
 
