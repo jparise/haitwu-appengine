@@ -97,10 +97,11 @@ too_many_digits = re.compile('\d\d\d')
 short_time = re.compile(r'^([1-2]?[0-9])(?:[ap]m)$',re.IGNORECASE)
 time = re.compile(r'^([1-2]?[0-9]):(\d\d)([ap]m)?$',re.IGNORECASE)
 word_shapes = (
-               re.compile(r'^[^a-z0-9\$]*([-&_0-9a-z\+]+(?:\'[a-z]+)?)[^a-z0-9]*$', re.IGNORECASE),
+               re.compile(r'^[^a-z0-9\$@]*([-@&_0-9a-z\+]+(?:\'[a-z]+)?)[^a-z0-9]*$', re.IGNORECASE),
                re.compile(r'^[^\$]*(\$\d+(?:\.\d{1,2})?)[^a-z0-9]*$', re.IGNORECASE),
                re.compile(r'^[^a-z0-9]*([1-2]?[0-9]:\d\d(\s*[ap]m)?)[^a-z0-9]*$', re.IGNORECASE),
                )
+
 class Nope(Exception):
     pass
 
@@ -125,12 +126,18 @@ class LineSyllablizer:
         if not word or len(word) == 0:
             return 0
         
+        if 'http:' in word:
+            raise Nope
+
         if '0' == word[0] and len(word) > 1:
             return 1 + self._count_syllables(word[1:])  # oh seven
         
         if '$' == word[0]:
             return 2 + self._count_syllables(word[1:]) # 13 dollars
         
+        if '@' == word[0]:
+            return 1 + self._count_syllables(word[1:]) # user name
+
         if '&' in word and len(word) > 1:
             return 1 + sum(self._count_syllables(w) for w in word.split('&'))
         
@@ -139,7 +146,7 @@ class LineSyllablizer:
         
         if '_' in word:
             return sum(self._count_syllables(w) for w in word.split('_'))
-
+        
         if not has_digit.search(word):
             return syllables[word]
         if too_many_digits.search(word):
