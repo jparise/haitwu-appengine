@@ -214,9 +214,9 @@ class LineSyllablizer:
         if syllable_count > n:
             raise Nope
         line = ' '.join(self.words[si:self.index])
-#        for f in single_line_filters:
-#            if f.search(line):
-#                raise Nope
+        for f in single_line_filters:
+            if f.search(line):
+                raise Nope
         self.lines.append(line)
     
     def seek_eol(self):
@@ -233,8 +233,8 @@ class LineSyllablizer:
         self.seek_eol()
         if first_word_comma.search(self.lines[1]) or first_word_comma.search(self.lines[2]):
             raise Nope
-#        if break_filter.search('\n'.join(self.lines)):
-#            raise Nope
+        if break_filter.search('\n'.join(self.lines)):
+            raise Nope
         return self.lines
         
 
